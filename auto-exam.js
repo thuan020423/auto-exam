@@ -77,13 +77,36 @@
 
         const radios = doc.querySelectorAll('input[type=radio]');
         const groups = {};
-        radios.forEach(r => { const n=r.getAttribute('name'), k=r.getAttribute('knv3-title'); if(n&&k){ if(!groups[n])groups[n]={k,o:[]}; groups[n].o.push(r.id); }});
+        radios.forEach(r => {
+            const n = r.getAttribute('name'), k = r.getAttribute('knv3-title');
+            if (!n || !k) return;
+            if (!groups[n]) groups[n] = { k, o: [] };
+            const label = r.nextElementSibling || r.parentElement;
+            const text = (label?.textContent || '').trim().substring(0, 120);
+            groups[n].o.push({ id: r.id, text });
+        });
+
+        const questionTexts = {};
+        doc.querySelectorAll('.question-title, .portlet-title, h4, h5, .quest-title, [class*="question"], p').forEach(el => {
+            const t = (el.textContent || '').trim();
+            if (t.length > 15 && t.includes('?')) questionTexts[Object.keys(questionTexts).length] = t.substring(0, 200);
+        });
 
         const answers = []; let matched = 0;
-        for (const [,g] of Object.entries(groups)) {
-            let aid = g.o.find(id => correctSet.has(id));
-            if (aid) matched++; else aid = g.o[Math.floor(Math.random()*g.o.length)];
-            answers.push({ ExaminationTestId:parseInt(g.k), UserAnswer:`[${aid}]`, UserExplain:null, BookMark:null, CheckInternet:0, FramePartID:parseInt(fpId) });
+        const unmatchedQs = [];
+        let qIdx = 0;
+
+        for (const [name, g] of Object.entries(groups)) {
+            let aid = g.o.find(opt => correctSet.has(opt.id));
+            if (aid) {
+                matched++;
+                answers.push({ ExaminationTestId:parseInt(g.k), UserAnswer:`[${aid.id}]`, UserExplain:null, BookMark:null, CheckInternet:0, FramePartID:parseInt(fpId) });
+            } else {
+                const pick = g.o[Math.floor(Math.random()*g.o.length)];
+                answers.push({ ExaminationTestId:parseInt(g.k), UserAnswer:`[${pick.id}]`, UserExplain:null, BookMark:null, CheckInternet:0, FramePartID:parseInt(fpId) });
+                unmatchedQs.push({ name, questionText: questionTexts[qIdx] || '(không lấy được text)', options: g.o });
+            }
+            qIdx++;
         }
 
         if (!userTestId || !encEid || !hExamId) return null;
@@ -96,7 +119,7 @@
         let passed = false;
         try { passed = JSON.parse(raw)[0]?.Value === "1"; } catch(e) {}
 
-        return { matched, total: answers.length, passed };
+        return { matched, total: answers.length, passed, unmatchedQs };
     }
 
     console.log('FPT AUTO EXAM v5\n');
@@ -125,6 +148,14 @@
                 results.push({ Bài: exam.name, KQ: '🟢 PASS' });
             } else {
                 console.log(`🔴 ${exam.name}: FAIL (${r.matched}/${r.total} matched, lần ${att})${att < MAX_RETRY ? ' → thi lại...' : ''}`);
+                if (r.unmatchedQs && r.unmatchedQs.length > 0) {
+                    console.log(`\n  ⚠️ ${r.unmatchedQs.length} CÂU MỚI CHƯA CÓ TRONG DATABASE:`);
+                    r.unmatchedQs.forEach((q, i) => {
+                        console.log(`  ❓ ${q.questionText}`);
+                        q.options.forEach(opt => console.log(`     [${opt.id}] ${opt.text}`));
+                        console.log('');
+                    });
+                }
             }
         }
         if (!ok) results.push({ Bài: exam.name, KQ: '🔴 FAIL' });

@@ -1,13 +1,54 @@
-// FPT Auto Exam v5 — https://github.com/YOUR_USERNAME/fpt-auto-exam
-// Console: fetch('https://YOUR_USERNAME.github.io/fpt-auto-exam/auto-exam.js').then(r=>r.text()).then(eval)
+// FPT Auto Complete + Exam v6
+// Console: fetch('https://auto-exam-gules.vercel.app/auto-exam.js').then(r=>r.text()).then(eval)
 
 (async function() {
     'use strict';
 
-    // ==================== CẤU HÌNH (EDIT Ở ĐÂY) ====================
+    // ==================== CẤU HÌNH ====================
     const RETAKE_PASSED = false;  // true = thi lại bài đã đạt | false = bỏ qua
     const MAX_RETRY = 3;          // Số lần thi lại tối đa
-    // ================================================================
+    const BATCH = 20;             // Số request song song (hoàn thành bài học)
+    // ==================================================
+
+    const courseId = new URLSearchParams(window.location.search).get('oid') || '7915';
+    const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
+
+    // ╔══════════════════════════════════════════════════╗
+    // ║  PHASE 1: HOÀN THÀNH TẤT CẢ BÀI HỌC            ║
+    // ╚══════════════════════════════════════════════════╝
+    console.log('━━━ PHASE 1: Hoàn thành bài học ━━━\n');
+
+    const listRes = await fetch(`/Curriculum/User_Curriculums?oid=${courseId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const listHtml = await listRes.text();
+    const items = [...new Set([...listHtml.matchAll(/LoadViewCur\((\d+)\)/g)].map(m => m[1]))];
+
+    if (items.length === 0) {
+        console.log('⚠️ Không tìm thấy bài học nào, bỏ qua Phase 1');
+    } else {
+        const secondsPerItem = Math.ceil((100 * 3600) / items.length);
+        const doItem = (curId) => Promise.all([
+            fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` }),
+            fetch('/Curriculum/Learn_SaveVideoAudio', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pLearnTime=600&pTotalTime=600` }),
+            fetch('/Curriculum/Learn_AddTime', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pSeconds=${secondsPerItem}` }),
+        ]);
+
+        let done = 0;
+        const start = Date.now();
+        for (let i = 0; i < items.length; i += BATCH) {
+            const batch = items.slice(i, i + BATCH);
+            await Promise.all(batch.map(id => doItem(id).then(() => {
+                done++;
+            }).catch(() => console.warn(`⚠️ Bài ${id} lỗi`))));
+            console.log(`✅ ${done}/${items.length} bài học`);
+        }
+        await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
+        console.log(`🟢 Phase 1 xong: ${done}/${items.length} bài — ${((Date.now()-start)/1000).toFixed(1)}s\n`);
+    }
+
+    // ╔══════════════════════════════════════════════════╗
+    // ║  PHASE 2: TỰ ĐỘNG THI                           ║
+    // ╚══════════════════════════════════════════════════╝
+    console.log('━━━ PHASE 2: Tự động thi ━━━\n');
 
     const EXAMS = [
         { curId:175299, name:"Quản lý thời gian bằng Time Blocking",
@@ -36,8 +77,6 @@
           dmap:{"988263":"tương ứng","988262":"đang xảy ra","988266":"hiện trạng","988267":"nhược điểm","988284":"cuối cùng","988282":"xuất phát","988289":"nào thuộc","988290":"KHÔNG"} },
     ];
 
-    const courseId = new URLSearchParams(window.location.search).get('oid') || '7915';
-    const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
 
     async function getExamId(curId) {
         const r = await fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` });

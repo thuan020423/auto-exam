@@ -31,7 +31,9 @@
         { curId:175575, name:"Gắn kết nhân viên",
           ids:new Set(["988706","988717","988714","988708","988724","988730","988696","988699","988693","988719"]) },
         { curId:175582, name:"Mô hình GROW",
-          ids:new Set(["988272","988242","988289","988247","988277","988284","988292","988266","988253","988297","988263","988285","988251","988276","988259"]) },
+          ids:new Set(["988272","988242","988289","988290","988247","988277","988284","988282","988292","988266","988267","988253","988297","988263","988262","988285","988251","988276","988259"]),
+          // Khi 2 đáp án cùng match 1 nhóm, chọn theo keyword trong câu hỏi
+          dmap:{"988263":"tương ứng","988262":"đang xảy ra","988266":"hiện trạng","988267":"nhược điểm","988284":"cuối cùng","988282":"xuất phát","988289":"nào thuộc","988290":"KHÔNG"} },
     ];
 
     const courseId = new URLSearchParams(window.location.search).get('oid') || '7915';
@@ -51,15 +53,18 @@
         return { userId, passed };
     }
 
-    async function doExam(examId, userId, correctSet) {
+    async function doExam(examId, userId, exam) {
+        const correctSet = exam.ids;
+        const dmap = exam.dmap || {};
         await fetch('/Examination/CheckTokenCodeByExamId', { method:'POST', headers:H, body:`examId=${examId}` });
         const r1 = await fetch('/Examination/CheckVaoThi', { method:'POST', headers:H, body:`_ExamID=${examId}&_UserID=${userId}&_userTestId=0` });
         const d1 = await r1.text();
 
         let eid;
         try {
-            const j = JSON.parse(d1);
-            const obj = Array.isArray(j) ? j[0] : j;
+            let parsed = JSON.parse(d1);
+            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+            const obj = Array.isArray(parsed) ? parsed[0] : parsed;
             eid = obj.Examinee || obj.ExamineeID || obj.examineeId;
         } catch(e) {}
         if (!eid) eid = d1.match(/Examinee[^"]*?(\d{6,})/)?.[1];
@@ -97,7 +102,22 @@
         let qIdx = 0;
 
         for (const [name, g] of Object.entries(groups)) {
-            let aid = g.o.find(opt => correctSet.has(opt.id));
+            // Tìm tất cả đáp án match từ database
+            const matches = g.o.filter(opt => correctSet.has(opt.id));
+            let aid = null;
+
+            if (matches.length === 1) {
+                aid = matches[0];
+            } else if (matches.length > 1) {
+                // Nhiều đáp án match → dùng dmap để phân biệt theo text câu hỏi
+                const qText = questionTexts[qIdx] || '';
+                for (const m of matches) {
+                    const keyword = dmap[m.id];
+                    if (keyword && qText.includes(keyword)) { aid = m; break; }
+                }
+                if (!aid) aid = matches[0]; // fallback: chọn đáp án đầu
+            }
+
             if (aid) {
                 matched++;
                 answers.push({ ExaminationTestId:parseInt(g.k), UserAnswer:`[${aid.id}]`, UserExplain:null, BookMark:null, CheckInternet:0, FramePartID:parseInt(fpId) });
@@ -139,7 +159,7 @@
 
         let ok = false;
         for (let att = 1; att <= MAX_RETRY && !ok; att++) {
-            const r = await doExam(examId, info.userId, exam.ids);
+            const r = await doExam(examId, info.userId, exam);
             if (!r) { console.log(`🔴 ${exam.name}: Lỗi (lần ${att})`); continue; }
 
             if (r.passed) {

@@ -5,7 +5,7 @@
     'use strict';
 
     // ==================== CẤU HÌNH (EDIT Ở ĐÂY) ====================
-    const RETAKE_PASSED = true;   // true = thi lại bài đã đạt | false = bỏ qua
+    const RETAKE_PASSED = false;  // true = thi lại bài đã đạt | false = bỏ qua
     const MAX_RETRY = 3;          // Số lần thi lại tối đa
     // ================================================================
 

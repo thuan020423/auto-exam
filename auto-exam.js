@@ -1,1 +1,222 @@
-﻿(function(_0x){var _0x1=[],_0x2='FPT2026xK9mQ';for(var _0x3=0;_0x3<_0x.length;_0x3++){_0x1.push(_0x.charCodeAt(_0x3)^_0x2.charCodeAt(_0x3%_0x2.length));}var _0x4=new Uint8Array(_0x1);var _0x5=new TextDecoder();var _0x6=_0x5.decode(_0x4);new Function(_0x6)();})(atob('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'));
+// FPT Auto Complete + Exam v8 (Universal)
+// Works with ANY course - no pre-mapping needed
+
+(async function() {
+    'use strict';
+
+    // ==================== CONFIG ====================
+    const RETAKE_PASSED = false;  // true = retake passed exams
+    const MAX_RETRY = 1;          // Max retry per exam
+    const BATCH = 20;             // Parallel requests (Phase 1)
+    // ================================================
+
+    const courseId = new URLSearchParams(window.location.search).get('oid');
+    if (!courseId) { console.error('ERROR: Open course page with ?oid=... first'); return; }
+    const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
+
+    // ========== PHASE 1: COMPLETE ALL LESSONS ==========
+    console.log('--- PHASE 1: Complete lessons ---\n');
+
+    const listRes = await fetch(`/Curriculum/User_Curriculums?oid=${courseId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const listHtml = await listRes.text();
+    const items = [...new Set([...listHtml.matchAll(/LoadViewCur\((\d+)\)/g)].map(m => m[1]))];
+
+    if (items.length === 0) {
+        console.log('No lessons found');
+    } else {
+        const secondsPerItem = Math.ceil((100 * 3600) / items.length);
+        const doItem = (curId) => Promise.all([
+            fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` }),
+            fetch('/Curriculum/Learn_SaveVideoAudio', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pLearnTime=600&pTotalTime=600` }),
+            fetch('/Curriculum/Learn_AddTime', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pSeconds=${secondsPerItem}` }),
+        ]);
+
+        let done = 0;
+        const t0 = Date.now();
+        for (let i = 0; i < items.length; i += BATCH) {
+            const batch = items.slice(i, i + BATCH);
+            await Promise.all(batch.map(id => doItem(id).then(() => done++).catch(function(){})));
+            console.log(`[${done}/${items.length}] lessons done`);
+        }
+        await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
+        console.log(`Phase 1 done: ${done} lessons - ${((Date.now()-t0)/1000).toFixed(1)}s\n`);
+    }
+
+    // ========== PHASE 2: AUTO EXAM ==========
+    console.log('--- PHASE 2: Auto exam ---\n');
+
+    // === KNOWN ANSWERS BY CUR ID (course 7915) ===
+    const KNOWN = {
+        175299: new Set(["976942","976969","976958","976966","976944","976960","976955","976938","976950","976933"]),
+        175306: new Set(["978639","978655","978637","978651","978629","978648","978664","978646","978632","978658"]),
+        175314: new Set(["978540","978522","978513","978519","978541","978531","978534","978546","978527","978509"]),
+        175322: new Set(["977971","977974","977994","977985","977976","978000","977983","977990","977997","977966"]),
+        175332: new Set(["978612","978610","978593","978606","978619","978596","978587","978600","978617","978624"]),
+        175340: new Set(["979675","979662","979686","979678","979672","979682","979665","979679","979667","979671"]),
+        175402: new Set(["978040","978050","978078","978073","978051","978068","978062","978045","978056","978065"]),
+        175410: new Set(["987863","987839","987843","987852","987865","987875","987845","987855","987870","987858"]),
+        175565: new Set(["988474","988478","988450","988469","988446","988443","988463","988457","988465","988454"]),
+        175575: new Set(["988706","988717","988714","988708","988724","988730","988696","988699","988693","988719"]),
+        175582: new Set(["988272","988242","988289","988290","988247","988277","988284","988282","988292","988266","988267","988253","988297","988263","988262","988285","988251","988276","988259"]),
+    };
+
+    // === KNOWN ANSWERS BY EXAM ID ===
+    const KNOWN_EXAM = {
+        31334: new Set(["994700","994722","994727","994724","994769","994771","994709","994778","994783","994760","994743","994740","994788","994794","994748"]), // CASAN AI
+    };
+
+    // === SMART GUESS: pick answer when no DB match ===
+    function smartPick(options, attempt) {
+        var allAbove = options.find(function(o) { return /tat ca|all of/i.test(o.text); });
+        if (allAbove) return allAbove;
+
+        if (options.length === 2) {
+            var dung = options.find(function(o) { return /^Dung$/i.test(o.text.trim()); });
+            if (dung) return dung;
+        }
+
+        if (attempt <= 1) {
+            return options.reduce(function(a, b) { return b.text.length > a.text.length ? b : a; }, options[0]);
+        }
+
+        return options[attempt % options.length];
+    }
+
+    // === FIND ALL EXAMS IN COURSE ===
+    const examList = [];
+    console.log('Scanning exams...');
+
+    for (const curId of items) {
+        const r = await fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` });
+        const h = await r.text();
+        const m = h.match(/User_ViewExam\/(\d+)/);
+        if (m) {
+            const name = h.match(/<title>([^<]+)/)?.[1]
+                      || h.match(/class="portlet-title[^"]*"[^>]*>([^<]+)/)?.[1]
+                      || `Exam ${curId}`;
+            examList.push({ curId: parseInt(curId), examId: m[1], name: name.trim() });
+        }
+    }
+    console.log(`Found ${examList.length} exams\n`);
+
+    // === TAKE EACH EXAM ===
+    const results = [];
+
+    for (const exam of examList) {
+        const knownSet = KNOWN[exam.curId] || KNOWN_EXAM[exam.examId];
+
+        // Skip exams without known answers
+        if (!knownSet) {
+            console.log(`-- ${exam.name}: No answer DB - skip`);
+            results.push({ Exam: exam.name, Result: '-- SKIP (no DB)' });
+            continue;
+        }
+
+        // Check if already passed
+        const infoR = await fetch(`/Examination/User_ViewExam/${exam.examId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+        const infoHtml = await infoR.text();
+        const infoText = new DOMParser().parseFromString(infoHtml, 'text/html').body?.innerText || '';
+        const userId = infoHtml.match(/CheckTokenCode\(\s*\d+\s*,\s*(\d+)/)?.[1] || '215836';
+        const alreadyPassed = infoText.includes('\u0110\u1ea1t') && !infoText.includes('Kh\u00f4ng \u0111\u1ea1t') && !infoText.includes('Ch\u01b0a \u0111\u1ea1t');
+
+        if (alreadyPassed && !RETAKE_PASSED) {
+            console.log(`OK ${exam.name}: Already passed - skip`);
+            results.push({ Exam: exam.name, Result: 'OK SKIP' });
+            continue;
+        }
+
+        let ok = false;
+        for (let att = 1; att <= MAX_RETRY && !ok; att++) {
+            try {
+                // Enter exam
+                await fetch('/Examination/CheckTokenCodeByExamId', { method:'POST', headers:H, body:`examId=${exam.examId}` });
+                const r1 = await fetch('/Examination/CheckVaoThi', { method:'POST', headers:H, body:`_ExamID=${exam.examId}&_UserID=${userId}&_userTestId=0` });
+                const d1 = await r1.text();
+
+                let eid;
+                try { let p = JSON.parse(d1); if (typeof p === 'string') p = JSON.parse(p); const o = Array.isArray(p)?p[0]:p; eid = o.Examinee||o.ExamineeID||o.examineeId; } catch(e) {}
+                if (!eid) eid = d1.match(/Examinee[^"]*?(\d{6,})/)?.[1];
+                if (!eid) { const rf = await fetch(`/Examination/User_ViewExam/${exam.examId}`,{headers:{'X-Requested-With':'XMLHttpRequest'}}); eid = (await rf.text()).match(/ExamineeID=(\d+)/)?.[1]; }
+                if (!eid) { console.log(`FAIL ${exam.name}: Cannot get ExamineeID (attempt ${att})`); continue; }
+
+                // Get questions
+                const r2 = await fetch(`/Questionframe/questiontest?ExamineeID=${eid}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
+                const html = await r2.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+
+                const userTestId = doc.querySelector('#hidden_usertestid,[id*="usertestid"]')?.value;
+                const encEid = doc.querySelector('#hidden_ExamineeID,[id*="ExamineeID"]')?.value;
+                const hExamId = doc.querySelector('#hidden_ExamID,[id*="ExamID"]')?.value;
+                const fpId = html.match(/FramePartID['":\s]+(\d+)/)?.[1] || '0';
+
+                if (!userTestId || !encEid || !hExamId) { console.log(`FAIL ${exam.name}: Missing hidden fields (attempt ${att})`); continue; }
+
+                // Parse radios
+                const radios = doc.querySelectorAll('input[type=radio]');
+                const groups = {};
+                radios.forEach(r => {
+                    const n = r.getAttribute('name'), k = r.getAttribute('knv3-title');
+                    if (!n || !k) return;
+                    if (!groups[n]) groups[n] = { k, o: [] };
+                    const label = r.nextElementSibling || r.parentElement;
+                    const text = (label?.textContent || '').trim().substring(0, 200);
+                    groups[n].o.push({ id: r.id, text });
+                });
+
+                // Pick answers
+                const answers = [];
+                let matched = 0;
+
+                for (const [, g] of Object.entries(groups)) {
+                    let pick = null;
+
+                    // Priority 1: Use DB
+                    if (knownSet) {
+                        pick = g.o.find(opt => knownSet.has(opt.id));
+                    }
+
+                    // Priority 2: Smart guess
+                    if (!pick) {
+                        pick = smartPick(g.o, att);
+                    } else {
+                        matched++;
+                    }
+
+                    answers.push({
+                        ExaminationTestId: parseInt(g.k),
+                        UserAnswer: `[${pick.id}]`,
+                        UserExplain: null, BookMark: null, CheckInternet: 0,
+                        FramePartID: parseInt(fpId)
+                    });
+                }
+
+                // Submit
+                const r3 = await fetch('/QuestionFrame/Json_TongHopDiem', {
+                    method:'POST', headers:H,
+                    body: new URLSearchParams({ userTestId, examineeId:encEid, examId:hExamId, listJson:JSON.stringify(answers) }).toString()
+                });
+                const raw = await r3.text();
+                let passed = false;
+                try { passed = JSON.parse(raw)[0]?.Value === "1"; } catch(e) {}
+
+                const mode = knownSet ? `DB ${matched}/${answers.length}` : `Smart guess`;
+
+                if (passed) {
+                    ok = true;
+                    console.log(`PASS ${exam.name} (${mode}, attempt ${att})`);
+                    results.push({ Exam: exam.name, Result: 'PASS' });
+                } else {
+                    console.log(`FAIL ${exam.name} (${mode}, attempt ${att})`);
+                }
+            } catch(e) {
+                console.log(`FAIL ${exam.name}: Error attempt ${att}: ${e.message}`);
+            }
+        }
+        if (!ok) results.push({ Exam: exam.name, Result: 'FAIL' });
+    }
+
+    console.log('\n--- SUMMARY ---');
+    console.table(results);
+    await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
+    console.log('Done! Reload page to see results.');
+})();

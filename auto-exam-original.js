@@ -1,4 +1,4 @@
-// FPT Auto Complete + Exam v13 (jQuery + DOM Fallback)
+// FPT Auto Complete + Exam v14 (Fuzzy Match + jQuery)
 // Works with ANY course
 
 (async function() {
@@ -261,17 +261,56 @@
             .replace(/[dD\u0111\u0110]/g,'d').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
     }
 
-    // Text-based answer picker
+    // Fuzzy word score: count how many keywords from 'needle' appear in 'haystack'
+    function wordScore(needle, haystack) {
+        const words = needle.split(' ').filter(w => w.length > 2);
+        if (words.length === 0) return 0;
+        const matched = words.filter(w => haystack.includes(w)).length;
+        return matched / words.length; // 0.0 to 1.0
+    }
+
+    // Find best matching option for a TEXT_MAP entry's answer
+    function fuzzyPickAnswer(aNorm, options) {
+        let best = null, bestScore = 0;
+        for (const o of options) {
+            const oNorm = norm(o.text);
+            // Try exact substring first
+            if (oNorm.includes(aNorm) || aNorm.includes(oNorm)) return o;
+            // Fuzzy word match
+            const score = wordScore(aNorm, oNorm);
+            if (score > bestScore && score >= 0.5) {
+                bestScore = score;
+                best = o;
+            }
+        }
+        return best;
+    }
+
+    // Text-based answer picker with fuzzy matching
     function textMatch(questionText, options, examId) {
         const tmap = TEXT_MAP[examId] || TEXT_MAP["C" + courseId];
         if (!tmap) return null;
         const qNorm = norm(questionText);
+
+        // Strategy 1: Match question keyword → find answer
         for (const entry of tmap) {
-            if (qNorm.includes(norm(entry.q))) {
-                const aNorm = norm(entry.a);
-                const match = options.find(function(o) { return norm(o.text).includes(aNorm); });
-                if (match) return match;
+            const qKey = norm(entry.q);
+            if (qNorm.includes(qKey) || wordScore(qKey, qNorm) >= 0.7) {
+                const pick = fuzzyPickAnswer(norm(entry.a), options);
+                if (pick) return pick;
             }
+        }
+        return null;
+    }
+
+    // Answer-only scan: match options directly against ALL known correct answers
+    // (bypasses question-answer alignment issues)
+    function answerOnlyScan(options, examId) {
+        const tmap = TEXT_MAP[examId] || TEXT_MAP["C" + courseId];
+        if (!tmap) return null;
+        for (const entry of tmap) {
+            const pick = fuzzyPickAnswer(norm(entry.a), options);
+            if (pick) return pick;
         }
         return null;
     }
@@ -407,12 +446,12 @@
                     groups[n].o.push({ id: r.id, text });
                 });
 
-                // Extract question texts
+                // Extract question texts (don't require '?' - Vietnamese questions may not have it)
                 const qTextEls = doc.querySelectorAll('.question-title, .portlet-title, h4, h5, .quest-title, [class*="question"], p, label, span');
                 const qTexts = [];
                 qTextEls.forEach(function(el) {
                     const t = (el.textContent || '').trim();
-                    if (t.length > 15 && t.includes('?')) qTexts.push(t.substring(0, 300));
+                    if (t.length > 15 && !qTexts.includes(t)) qTexts.push(t.substring(0, 300));
                 });
 
                 // Pick answers with 3-tier strategy
@@ -428,15 +467,27 @@
                         pick = g.o.find(opt => knownSet.has(opt.id));
                     }
 
-                    // Tier 2: Text match (for randomized IDs)
+                    // Tier 2: Text match by question text
                     if (!pick && hasTextMap) {
+                        // Try matching with aligned question text first
                         const qText = qTexts[qIdx] || '';
                         pick = textMatch(qText, g.o, parseInt(exam.examId));
+                        // If aligned match fails, try ALL question texts
+                        if (!pick) {
+                            for (const qt of qTexts) {
+                                pick = textMatch(qt, g.o, parseInt(exam.examId));
+                                if (pick) break;
+                            }
+                        }
+                        // Last resort: answer-only scan (ignore question text entirely)
+                        if (!pick) {
+                            pick = answerOnlyScan(g.o, parseInt(exam.examId));
+                        }
                         if (pick) matchedText++;
                     }
 
                     if (pick && !knownSet?.has(pick.id)) {
-                        // matched by text only
+                        // matched by text
                     } else if (pick) {
                         matchedId++;
                     }

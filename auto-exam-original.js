@@ -15,20 +15,42 @@
     const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
 
     // ========== PHASE 1: COMPLETE ALL LESSONS ==========
+    // XHR Wrapper to bypass CSP and capture 500 responses
+    const sendRequest = (url, bodyData) => {
+        return new Promise((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = () => resolve(xhr.responseText || "");
+            xhr.onerror = () => resolve("");
+            xhr.send(bodyData);
+        });
+    };
+
     console.log('--- PHASE 1: Complete lessons ---\n');
 
     const listRes = await fetch(`/Curriculum/User_Curriculums?oid=${courseId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
     const listHtml = await listRes.text();
-    const items = [...new Set([...listHtml.matchAll(/(?:LoadViewCur\(|data-cur-id=["']|curId=["'])(\d+)/g)].map(m => m[1]))];
+    // Support both old and new UI data-cur-id formats
+    let items = [...new Set([...listHtml.matchAll(/(?:LoadViewCur\(|data-cur-id=["']|curId=["'])(\d+)/g)].map(m => m[1]))];
+    
+    // Also try DOM extraction as fallback
+    if (items.length === 0) {
+        items = Array.from(document.querySelectorAll('[data-cur-id]'))
+            .map(el => el.getAttribute('data-cur-id'))
+            .filter(id => id && id.trim() !== '');
+        items = [...new Set(items)];
+    }
 
     if (items.length === 0) {
         console.log('No lessons found');
     } else {
         const secondsPerItem = Math.ceil((100 * 3600) / items.length);
         const doItem = (curId) => Promise.all([
-            fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` }),
-            fetch('/Curriculum/Learn_SaveVideoAudio', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pLearnTime=600&pTotalTime=600` }),
-            fetch('/Curriculum/Learn_AddTime', { method:'POST', headers:H, body:`pCourseId=${courseId}&pCurriculumId=${curId}&pSeconds=${secondsPerItem}` }),
+            sendRequest('/Curriculum/User_ViewCur', `oid=${courseId}&id=${curId}`),
+            sendRequest('/Curriculum/Learn_SaveVideoAudio', `pCourseId=${courseId}&pCurriculumId=${curId}&pLearnTime=600&pTotalTime=600`),
+            sendRequest('/Curriculum/Learn_AddTime', `pCourseId=${courseId}&pCurriculumId=${curId}&pSeconds=${secondsPerItem}`),
         ]);
 
         let done = 0;
@@ -249,9 +271,11 @@
     console.log('Scanning exams...');
 
     for (const curId of items) {
-        const r = await fetch('/Curriculum/User_ViewCur', { method:'POST', headers:H, body:`oid=${courseId}&id=${curId}` });
-        const h = await r.text();
-        const m = h.match(/User_ViewExam\/(\d+)/);
+        const h = await sendRequest('/Curriculum/User_ViewCur', `oid=${courseId}&id=${curId}`);
+        
+        let m = h.match(/User_ViewExam\/(\d+)/);
+        if (!m) m = h.match(/User_ViewExam\?id=(\d+)/);
+        if (!m) m = h.match(/ExaminationTestId\s*:\s*'?(\d+)'?/);
         if (m) {
             const name = h.match(/<title>([^<]+)/)?.[1]
                       || h.match(/class="portlet-title[^"]*"[^>]*>([^<]+)/)?.[1]

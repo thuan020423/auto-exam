@@ -1,4 +1,4 @@
-// FPT Auto Complete + Exam v9 (Universal + Text Matching)
+// FPT Auto Complete + Exam v13 (jQuery + DOM Fallback)
 // Works with ANY course
 
 (async function() {
@@ -15,28 +15,43 @@
     const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
 
     // ========== PHASE 1: COMPLETE ALL LESSONS ==========
-    // XHR Wrapper to bypass CSP (handles both POST and GET)
+    // Use page's jQuery $.ajax to bypass CSP (inherits session tokens/cookies)
     const sendRequest = (url, bodyData) => {
         return new Promise((resolve) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.onload = () => resolve(xhr.responseText || "");
-            xhr.onerror = () => resolve("");
-            xhr.send(bodyData);
+            if (window.jQuery) {
+                $.ajax({ url, type:'POST', data:bodyData, headers:{'X-Requested-With':'XMLHttpRequest'},
+                    success: (d) => resolve(typeof d === 'string' ? d : JSON.stringify(d)),
+                    error: () => resolve("")
+                });
+            } else {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+                xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
+                xhr.onload = () => resolve(xhr.responseText || "");
+                xhr.onerror = () => resolve("");
+                xhr.send(bodyData);
+            }
         });
     };
     const sendGet = (url) => {
         return new Promise((resolve) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.onload = () => resolve(xhr.responseText || "");
-            xhr.onerror = () => resolve("");
-            xhr.send();
+            if (window.jQuery) {
+                $.ajax({ url, type:'GET', headers:{'X-Requested-With':'XMLHttpRequest'},
+                    success: (d) => resolve(typeof d === 'string' ? d : JSON.stringify(d)),
+                    error: () => resolve("")
+                });
+            } else {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
+                xhr.onload = () => resolve(xhr.responseText || "");
+                xhr.onerror = () => resolve("");
+                xhr.send();
+            }
         });
     };
+    const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
     console.log('--- PHASE 1: Complete lessons ---\n');
 
@@ -279,8 +294,10 @@
     const examList = [];
     console.log('Scanning exams...');
 
+    // Method 1: API scan (works for old courses)
     for (const curId of items) {
         const h = await sendRequest('/Curriculum/User_ViewCur', `oid=${courseId}&id=${curId}`);
+        if (!h || h.length < 50) continue;
         
         let m = h.match(/User_ViewExam\/(\d+)/);
         if (!m) m = h.match(/User_ViewExam\?id=(\d+)/);
@@ -290,6 +307,40 @@
                       || h.match(/class="portlet-title[^"]*"[^>]*>([^<]+)/)?.[1]
                       || `Exam ${curId}`;
             examList.push({ curId: parseInt(curId), examId: m[1], name: name.trim() });
+        }
+    }
+
+    // Method 2: DOM click fallback (for new FPT UI where API returns empty)
+    if (examList.length === 0) {
+        console.log('API scan found 0 exams - trying DOM click fallback...');
+        const allCurEls = document.querySelectorAll('[data-cur-id]');
+        for (const el of allCurEls) {
+            const elText = (el.textContent || '').trim();
+            // Only click items that look like exams
+            if (!/b\u00e0i thi|b\u00e0i ki\u1ec3m tra|ki\u1ec3m tra cu\u1ed1i|thi cu\u1ed1i/i.test(elText)) continue;
+            
+            const curId = el.getAttribute('data-cur-id');
+            console.log(`Clicking: ${elText.substring(0, 60)}... (${curId})`);
+            el.click();
+            await delay(1500);
+            
+            // Scrape loaded content for exam ID
+            const panels = document.querySelectorAll('#MainRightPanel, #content_cur_detail, .content-right, .portlet-body, iframe');
+            for (const panel of panels) {
+                let html = '';
+                if (panel.tagName === 'IFRAME') {
+                    try { html = panel.contentDocument?.body?.innerHTML || ''; } catch(e) {}
+                } else {
+                    html = panel.innerHTML || '';
+                }
+                let m = html.match(/User_ViewExam\/(\d+)/);
+                if (!m) m = html.match(/examId['"]?\s*[:=]\s*['"]?(\d+)/i);
+                if (m && !examList.find(e => e.examId === m[1])) {
+                    examList.push({ curId: parseInt(curId), examId: m[1], name: elText.substring(0, 100) });
+                    console.log(`Found exam via DOM: ${elText.substring(0, 60)} (ID: ${m[1]})`);
+                    break;
+                }
+            }
         }
     }
     console.log(`Found ${examList.length} exams\n`);

@@ -19,7 +19,7 @@
 
     const listRes = await fetch(`/Curriculum/User_Curriculums?oid=${courseId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
     const listHtml = await listRes.text();
-    const items = [...new Set([...listHtml.matchAll(/LoadViewCur\((\d+)\)/g)].map(m => m[1]))];
+    const items = [...new Set([...listHtml.matchAll(/(?:LoadViewCur\(|data-cur-id=["']|curId=["'])(\d+)/g)].map(m => m[1]))];
 
     if (items.length === 0) {
         console.log('No lessons found');

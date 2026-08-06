@@ -444,8 +444,9 @@
                     const n = r.getAttribute('name'), k = r.getAttribute('knv3-title');
                     if (!n || !k) return;
                     if (!groups[n]) groups[n] = { k, o: [] };
-                    const label = r.nextElementSibling || r.parentElement;
-                    const text = (label?.textContent || '').trim().substring(0, 200);
+                    const labelEl = r.closest('label') || r.parentElement;
+                    const bTag = labelEl?.querySelector('b, strong');
+                    const text = (bTag?.textContent || r.previousElementSibling?.textContent || labelEl?.textContent || '').trim().substring(0, 200);
                     groups[n].o.push({ id: r.id, text });
                 });
 

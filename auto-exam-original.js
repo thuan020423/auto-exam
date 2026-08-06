@@ -1,13 +1,14 @@
-// FPT Auto Complete + Exam v9 (Universal + Text Matching)
-// Works with ANY course
+// FPT Auto Complete + Exam v10 (Universal + Auto-Discovery + Auto-Record)
+// Works with ANY course - Auto takes & records passed answers into TEXT_MAP
 
 (async function() {
     'use strict';
 
     // ==================== CONFIG ====================
     const RETAKE_PASSED = false;
-    const MAX_RETRY = 1;
+    const MAX_RETRY = 2;          // Try up to 2 times for unknown exams
     const BATCH = 20;
+    const TAKE_UNKNOWN_EXAMS = true; // Auto take exams even without DB
     // ================================================
 
     const courseId = new URLSearchParams(window.location.search).get('oid');
@@ -66,7 +67,6 @@
     };
 
     // === TEXT-BASED ANSWER MAP (for exams with randomized IDs) ===
-    // Format: { examId: [ {q: "keyword in question", a: "correct answer text"}, ... ] }
     const TEXT_MAP = {
         31334: [
             {q: "muc dich", a: "muc do truong thanh"},
@@ -141,13 +141,14 @@
 
     // === TAKE EACH EXAM ===
     const results = [];
+    const recordedTextMaps = {};
 
     for (const exam of examList) {
         const knownSet = KNOWN[exam.curId] || KNOWN_EXAM[exam.examId];
         const hasTextMap = TEXT_MAP[exam.examId];
 
-        // Skip exams without any answer source
-        if (!knownSet && !hasTextMap) {
+        // Skip exams without DB only if TAKE_UNKNOWN_EXAMS is false
+        if (!knownSet && !hasTextMap && !TAKE_UNKNOWN_EXAMS) {
             console.log(`-- ${exam.name}: No answer DB - skip`);
             results.push({ Exam: exam.name, Result: '-- SKIP (no DB)' });
             continue;
@@ -209,11 +210,14 @@
                 const qTexts = [];
                 qTextEls.forEach(function(el) {
                     const t = (el.textContent || '').trim();
-                    if (t.length > 15 && t.includes('?')) qTexts.push(t.substring(0, 300));
+                    if (t.length > 15 && (t.includes('?') || t.includes('C\u00e2u') || t.includes(':'))) {
+                        if (!qTexts.includes(t)) qTexts.push(t.substring(0, 300));
+                    }
                 });
 
                 // Pick answers with 3-tier strategy
                 const answers = [];
+                const currentExamTextMap = [];
                 let matchedId = 0, matchedText = 0, guessed = 0;
                 let qIdx = 0;
 
@@ -244,6 +248,13 @@
                         guessed++;
                     }
 
+                    // Record question & chosen answer text for TEXT_MAP generation
+                    const currentQText = qTexts[qIdx] || `Question ${qIdx + 1}`;
+                    currentExamTextMap.push({
+                        q: currentQText.substring(0, 50).trim(),
+                        a: (pick?.text || '').substring(0, 100).trim()
+                    });
+
                     answers.push({
                         ExaminationTestId: parseInt(g.k),
                         UserAnswer: `[${pick.id}]`,
@@ -268,6 +279,7 @@
                     ok = true;
                     console.log(`PASS ${exam.name} (${mode})`);
                     results.push({ Exam: exam.name, Result: 'PASS' });
+                    recordedTextMaps[exam.examId] = currentExamTextMap;
                 } else {
                     console.log(`FAIL ${exam.name} (${mode})`);
                 }
@@ -280,6 +292,21 @@
 
     console.log('\n--- SUMMARY ---');
     console.table(results);
+    
+    // Print RECORDED TEXT_MAP for any passed exams
+    if (Object.keys(recordedTextMaps).length > 0) {
+        console.log('\n==================================================');
+        console.log('🎉 RECORDED TEXT_MAP FOR PASSED EXAMS');
+        console.log('==================================================\n');
+        for (const [eId, mapArr] of Object.entries(recordedTextMaps)) {
+            console.log(`TEXT_MAP[${eId}] = [`);
+            mapArr.forEach(item => {
+                console.log(`    { q: ${JSON.stringify(item.q)}, a: ${JSON.stringify(item.a)} },`);
+            });
+            console.log(`];\n`);
+        }
+    }
+
     await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
     console.log('Done!');
 })();

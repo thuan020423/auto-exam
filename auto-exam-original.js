@@ -1,4 +1,4 @@
-// FPT Auto Complete + Exam v14 (Fuzzy Match + jQuery)
+// FPT Auto Complete + Exam v15 (Fixed Vietnamese norm)
 // Works with ANY course
 
 (async function() {
@@ -258,7 +258,10 @@
     // Normalize Vietnamese text for matching (remove diacritics)
     function norm(s) {
         return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-            .replace(/[dD\u0111\u0110]/g,'d').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+            .replace(/[\u0111\u0110]/g,'d')
+            .replace(/[\u01B0\u01AF]/g,'u')
+            .replace(/[\u01A1\u01A0]/g,'o')
+            .toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
     }
 
     // Fuzzy word score: count how many keywords from 'needle' appear in 'haystack'

@@ -15,7 +15,7 @@
     const H = { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With':'XMLHttpRequest' };
 
     // ========== PHASE 1: COMPLETE ALL LESSONS ==========
-    // XHR Wrapper to bypass CSP and capture 500 responses
+    // XHR Wrapper to bypass CSP (handles both POST and GET)
     const sendRequest = (url, bodyData) => {
         return new Promise((resolve) => {
             const xhr = new XMLHttpRequest();
@@ -27,11 +27,20 @@
             xhr.send(bodyData);
         });
     };
+    const sendGet = (url) => {
+        return new Promise((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = () => resolve(xhr.responseText || "");
+            xhr.onerror = () => resolve("");
+            xhr.send();
+        });
+    };
 
     console.log('--- PHASE 1: Complete lessons ---\n');
 
-    const listRes = await fetch(`/Curriculum/User_Curriculums?oid=${courseId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const listHtml = await listRes.text();
+    const listHtml = await sendGet(`/Curriculum/User_Curriculums?oid=${courseId}`);
     // Support both old and new UI data-cur-id formats
     let items = [...new Set([...listHtml.matchAll(/(?:LoadViewCur\(|data-cur-id=["']|curId=["'])(\d+)/g)].map(m => m[1]))];
     
@@ -60,7 +69,7 @@
             await Promise.all(batch.map(id => doItem(id).then(() => done++).catch(function(){})));
             console.log(`[${done}/${items.length}] lessons done`);
         }
-        await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
+        await sendGet(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`);
         console.log(`Phase 1 done: ${done} lessons - ${((Date.now()-t0)/1000).toFixed(1)}s\n`);
     }
 
@@ -300,8 +309,7 @@
         }
 
         // Check if already passed
-        const infoR = await fetch(`/Examination/User_ViewExam/${exam.examId}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
-        const infoHtml = await infoR.text();
+        const infoHtml = await sendGet(`/Examination/User_ViewExam/${exam.examId}`);
         const infoText = new DOMParser().parseFromString(infoHtml, 'text/html').body?.innerText || '';
         const userId = infoHtml.match(/CheckTokenCode\(\s*\d+\s*,\s*(\d+)/)?.[1] || '215836';
         const alreadyPassed = infoText.includes('\u0110\u1ea1t') && !infoText.includes('Kh\u00f4ng \u0111\u1ea1t') && !infoText.includes('Ch\u01b0a \u0111\u1ea1t');
@@ -316,19 +324,17 @@
         for (let att = 1; att <= MAX_RETRY && !ok; att++) {
             try {
                 // Enter exam
-                await fetch('/Examination/CheckTokenCodeByExamId', { method:'POST', headers:H, body:`examId=${exam.examId}` });
-                const r1 = await fetch('/Examination/CheckVaoThi', { method:'POST', headers:H, body:`_ExamID=${exam.examId}&_UserID=${userId}&_userTestId=0` });
-                const d1 = await r1.text();
+                await sendRequest('/Examination/CheckTokenCodeByExamId', `examId=${exam.examId}`);
+                const d1 = await sendRequest('/Examination/CheckVaoThi', `_ExamID=${exam.examId}&_UserID=${userId}&_userTestId=0`);
 
                 let eid;
                 try { let p = JSON.parse(d1); if (typeof p === 'string') p = JSON.parse(p); const o = Array.isArray(p)?p[0]:p; eid = o.Examinee||o.ExamineeID||o.examineeId; } catch(e) {}
                 if (!eid) eid = d1.match(/Examinee[^"]*?(\d{6,})/)?.[1];
-                if (!eid) { const rf = await fetch(`/Examination/User_ViewExam/${exam.examId}`,{headers:{'X-Requested-With':'XMLHttpRequest'}}); eid = (await rf.text()).match(/ExamineeID=(\d+)/)?.[1]; }
+                if (!eid) { const rf = await sendGet(`/Examination/User_ViewExam/${exam.examId}`); eid = rf.match(/ExamineeID=(\d+)/)?.[1]; }
                 if (!eid) { console.log(`FAIL ${exam.name}: Cannot get ExamineeID (attempt ${att})`); continue; }
 
                 // Get questions
-                const r2 = await fetch(`/Questionframe/questiontest?ExamineeID=${eid}`, { headers:{'X-Requested-With':'XMLHttpRequest'} });
-                const html = await r2.text();
+                const html = await sendGet(`/Questionframe/questiontest?ExamineeID=${eid}`);
                 const doc = new DOMParser().parseFromString(html, 'text/html');
 
                 const userTestId = doc.querySelector('#hidden_usertestid,[id*="usertestid"]')?.value;
@@ -400,11 +406,9 @@
                 }
 
                 // Submit
-                const r3 = await fetch('/QuestionFrame/Json_TongHopDiem', {
-                    method:'POST', headers:H,
-                    body: new URLSearchParams({ userTestId, examineeId:encEid, examId:hExamId, listJson:JSON.stringify(answers) }).toString()
-                });
-                const raw = await r3.text();
+                const raw = await sendRequest('/QuestionFrame/Json_TongHopDiem',
+                    new URLSearchParams({ userTestId, examineeId:encEid, examId:hExamId, listJson:JSON.stringify(answers) }).toString()
+                );
                 let passed = false;
                 try { passed = JSON.parse(raw)[0]?.Value === "1"; } catch(e) {}
 
@@ -426,6 +430,6 @@
 
     console.log('\n--- SUMMARY ---');
     console.table(results);
-    await fetch(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`).catch(function(){});
+    await sendGet(`/Curriculum/AjaxClearCacheCourseDashboard?courseId=${courseId}`);
     console.log('Done!');
 })();
